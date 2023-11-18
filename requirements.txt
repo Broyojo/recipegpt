@@ -1,3 +1,7 @@
 openai
 transformers
 optimum
+pinecone-client
+accelerate
+fastapi
+uvicorn[standard]

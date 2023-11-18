@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -31,15 +32,16 @@
 <body style="background-color: #f3e5f5; color: #333; font-family: 'Arial', sans-serif;">
     <a href="home.html" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px; position: absolute; top: 10px; right: 10px">Go to Home</a>
     <div class="container" style="margin-top: 20px; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
-            <h2>Recipe Generator</h2>
-    
-            <!-- Form for uploading photos -->
-            <form id="myForm" onsubmit="sendImagetoOpenAI(event)" method="post" enctype="multipart/form-data">
-                <div class="file-field">
-                <label for="images" style="font-size: 18px; color: #673ab7; margin-bottom: 10px;">Upload Images of Food Items Available</label>
+        <h2>Recipe Generator</h2>
+
+        <!-- Form for uploading photos -->
+        <form id="myForm" onsubmit="sendImagetoOpenAI(event)" method="post" enctype="multipart/form-data">
+            <div class="file-field">
+                <label for="images" style="font-size: 18px; color: #673ab7; margin-bottom: 10px;">Upload an Image of Food</label>
                 <br>
                 <input id="imageInput" type="file" name="photos" accept="image/*" multiple>
             </div>
+
             <div class="input-field" style="margin-top: 20px;">
                 <label for="calories">Amount of Calories:</label>
                 <select id="calories" name="Target Calorie Range" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
@@ -70,29 +72,7 @@
                 </select>
             </div>
 
-            <div class="input-field" style="margin-top: 20px;">
-                <label for="mealType">Type of Meal/Diet:</label>
-                <select id="mealType" name="mealType" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
-                    <option value="breakfast">Breakfast</option>
-                    <option value="lunch">Lunch</option>
-                    <option value="dinner">Dinner</option>
-                    <option value="dessert">Dessert</option>
-                    <option value="drinks">Drinks</option>
-                    <option value="snacks">Snacks</option>
-                    <option value="noPreference">No Preference</option>
-                </select>
-            </div>
-
-            <div class="input-field" style="margin-top: 20px;">
-                <label for="manualIngredients">Enter Ingredients Manually:</label>
-                <textarea id="manualIngredients" name="manualIngredients" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;"></textarea>
-            </div>
-
-            <button type="submit" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px;">Generate Recipes</button>
+            <button type="submit" onclick="sendImagetoOpenAI()" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px;">Generate Recipe</button>
         </form>
     </div>
-
-    
-
 </body>
-</html>

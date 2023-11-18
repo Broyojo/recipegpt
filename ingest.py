@@ -17,9 +17,16 @@ import json
 with open("Epicurious/full_format_recipes.json", "r") as f:
     recipes = json.load(f)
 
-model = AutoModel.from_pretrained('jinaai/jina-embeddings-v2-base-en', trust_remote_code=True).to("mps")
+model = AutoModel.from_pretrained(
+    'jinaai/jina-embeddings-v2-base-en', 
+    trust_remote_code=True, 
+    low_cpu_mem_usage=True,
+    device_map="auto",
+).to("cuda")
 
-BATCH_SIZE = 100
+# model = model.to_bettertransformer()
+
+BATCH_SIZE = 8
 
 def make_document(recipe):
     s = ""
@@ -66,20 +73,22 @@ def dedup(recipe_documents):
 
 recipe_documents = dedup([make_document(recipe) for recipe in recipes])
 
-for i in tqdm(range(0, len(recipe_documents), BATCH_SIZE)):
-    documents = recipe_documents[i:i+BATCH_SIZE]
-    with torch.no_grad():
-        embeddings = model.encode([document[0] for document in documents])
-    vectors = [
-        (str(i+j), embedding.tolist(), metadata) for j, (embedding, metadata) in enumerate(zip(embeddings, [document[1] for document in documents]))
-    ]
-    index.upsert(vectors)
+print(len(recipe_documents))
+
+# for i in tqdm(range(0, len(recipe_documents), BATCH_SIZE)):
+#     documents = recipe_documents[i:i+BATCH_SIZE]
+#     with torch.no_grad():
+#         embeddings = model.encode([document[0] for document in documents])
+#     vectors = [
+#         (str(i+j), embedding.tolist(), metadata) for j, (embedding, metadata) in enumerate(zip(embeddings, [document[1] for document in documents]))
+#     ]
+#     index.upsert(vectors)
 
 results = index.query(
-    vector=model.encode("tomatoes, potatoes, onions, carrots").tolist(),
-    filter={
-        "calories": {"$lte": 100},
-    },
+    vector=model.encode('organic milk, orange juice, eggs, lettuce, yogurts').tolist(),
+    # filter={
+    #     "calories": {"$lte": 100},
+    # },
     top_k=3,
     include_metadata=True,
 )
