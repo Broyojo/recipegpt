@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Generator</title>
+
+    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <script>
+        async function sendImagetoOpenAI(event) {
+            event.preventDefault(); // Prevent default form submission behavior
+
+            var form = document.getElementById('myForm');
+            var formData = new FormData(form);
+
+            try {
+                let response = await fetch('/get_recipe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                let result = await response.json();
+                console.log('Success:', result);
+                // Handle the response here, like updating the UI with the generated recipe
+            } catch (error) {
+                console.error('Error:', error);
+                // Handle errors, e.g., show error message to the user
+            }
+        }
+    </script>
+</head>
+<body style="background-color: #f3e5f5; color: #333; font-family: 'Arial', sans-serif;">
+    <a href="home.html" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px; position: absolute; top: 10px; right: 10px">Go to Home</a>
+    <div class="container" style="margin-top: 20px; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
+        <h2>Recipe Generator</h2>
+
+        <!-- Form for uploading photos -->
+        <form id="myForm" onsubmit="sendImagetoOpenAI(event)" method="post" enctype="multipart/form-data">
+            <div class="file-field">
+                <label for="images" style="font-size: 18px; color: #673ab7; margin-bottom: 10px;">Upload an Image of Food</label>
+                <br>
+                <input id="imageInput" type="file" name="photos" accept="image/*" multiple>
+            </div>
+
+            <div class="input-field" style="margin-top: 20px;">
+                <label for="calories">Amount of Calories:</label>
+                <select id="calories" name="Target Calorie Range" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
+                    <option value="low">0 - 200</option>
+                    <option value="lowmid">200 - 400</option>
+                    <option value="mid">400 - 600</option>
+                    <option value="highmid">600 - 800</option>
+                    <option value="highermid">800 - 1000</option>
+                    <option value="highestmid">1000 - 1200</option>
+                    <option value="high">1200 - 1400</option>
+                    <option value="max">1500+</option>
+                </select>
+            </div>
+
+            <div class="input-field" style="margin-top: 20px;">
+                <label for="dietaryRestrictions">Dietary Restrictions/Diet:</label>
+                <select id="dietaryRestrictions" name="dietaryRestrictions" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
+                    <option value="none">None</option>
+                    <option value="vegetarian">Vegetarian</option>
+                    <option value="vegan">Vegan</option>
+                    <option value="glutenFree">Gluten-Free</option>
+                    <option value="dairyFree">Dairy-Free</option>
+                    <option value="kosher">Kosher</option>
+                    <option value="keto">Keto</option>
+                    <option value="halal">Halal</option>
+                    <option value="diabetes">Diabetes</option>
+                    <option value="lowcarb">Low Carb</option>
+                </select>
+            </div>
+
+            <button type="submit" onclick="sendImagetoOpenAI()" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px;">Generate Recipe</button>
+        </form>
+    </div>
+</body>
