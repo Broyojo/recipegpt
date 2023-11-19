@@ -237,7 +237,7 @@ async def inverse_recipe(
                 {
                     "role": "user",
                     "content": [
-                        f"Output a recipe that is possible to make given the ingredients in the image. Here is an example recipe: {recipe_documents[0]}\n\nMake sure the recipe follows the dietary restriction of '{dietary_restrictions}'. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Please make your recipe detailed and easy to follow.",
+                        f"Output a recipe that is possible to make given the ingredients in the image. Here is an example recipe: {recipe_documents[0]}\n\nMake sure the recipe follows the dietary restriction of '{dietary_restrictions}'. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Please make your recipe detailed and easy to follow. Even if its not clear, please try to make a recipe that is as close to the image as possible. Here is the image:",
                         *[{"image": file} for file in encoded_files],
                     ],
                 }
