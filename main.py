@@ -12,9 +12,8 @@ from transformers import (AutoModel, AutoModelForSequenceClassification,
                           AutoTokenizer)
 
 app = FastAPI()
-client = OpenAI()
+client = OpenAI(api_key="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")
 
-openai.api_key = "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"
 PINECONE_API_KEY = "35abfaa7-5beb-403b-a878-bbcc51742cc4"
 pinecone.init(api_key=PINECONE_API_KEY, environment="gcp-starter")
 
@@ -91,12 +90,12 @@ model = AutoModel.from_pretrained(
     trust_remote_code=True, 
     low_cpu_mem_usage=True,
     device_map="auto",
-).to("cuda")
+).to("cpu")
 
 @app.post("/get_recipe")
 async def get_recipe(
     photos: List[UploadFile] = Form(...),
-    # target_calorie_range: str = Form(...),
+    target_calorie_range: str = Form(...),
     # dietary_restrictions: str = Form(...),
     # meal_type: str = Form(...),
     # manual_ingredients: str = Form(...)
@@ -108,7 +107,7 @@ async def get_recipe(
     
     ingredients_over_rounds = []
     
-    for _ in range(5):
+    for _ in tqdm(range(5)):
         ingredients = client.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
@@ -147,27 +146,32 @@ async def get_recipe(
         ],
         max_tokens=1024,
     ).choices[0].message.content
+    print(target_calorie_range)
     
+    calorie_range = target_calorie_range.split("-")
+
     results = index.query(
         vector=model.encode(ingredients).tolist(),
-        # filter={
-        #     "calories": {"$lte": 100},
-        # },
+        filter={
+            "$and": [{"calories": {"$gte": int(calorie_range[0])}}, {"calories": {"$lte": int(calorie_range[1])}}],
+        },
         top_k=10,
         include_metadata=True,
     )
+
+    print(results)
     
     matched_recipes = []
     
     for result in results.matches:
         matched_recipes.append(recipe_documents[int(result["id"])][0])
         
-    prompt = f"You are a helpful recipe creator/suggester. Any recipe you suggest or create must be possible to make given all the ingredients available. Here are the ingredients available:\n{ingredients}\n\nHere are a few potentially relevant recipes that relate to the available ingredients:\n"
+    prompt = f"You are a helpful recipe creator/suggester. Any recipe you suggest or create must be possible to make given all the ingredients available. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Here are the ingredients available:\n{ingredients}\n\n. Here are a few potentially relevant recipes that relate to the available ingredients:\n"
     
     for matched_recipe in matched_recipes:
         prompt += f"{matched_recipe}\n\n"
     
-    prompt += "Your job is to synthesize a new recipe that is possible to make given the available ingredients and taking some inspiration from the potentially relevant recipes. Please make your recipe detailed and easy to follow:"
+    prompt += "Your job is to synthesize a new recipe that is possible to make given the available ingredients and taking some inspiration from the potentially relevant recipes. Ensure that the calorie count of the recipe is within the provided range. Please make your recipe detailed and easy to follow:"
     
     print(prompt)
     
@@ -185,5 +189,4 @@ async def get_recipe(
     ).choices[0].message.content
     
     print(created_recipe)
-    
     return {"recipe": created_recipe}
