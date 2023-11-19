@@ -73,6 +73,11 @@ async def home():
     with open("static/home.html", "r") as f:
         return HTMLResponse(f.read())
 
+@app.get("/home.html")
+async def home():
+    with open("static/home.html", "r") as f:
+        return HTMLResponse(f.read())
+
 @app.get("/main.html")
 async def main():
     with open("static/main.html", "r") as f:
