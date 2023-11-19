@@ -91,15 +91,12 @@ async def page():
     with open("static/page.html", "r") as f:
         return HTMLResponse(f.read())
 
-with open("Epicurious/full_format_recipes.json", "r") as f:
-    recipes = json.load(f)
-
 model = AutoModel.from_pretrained(
     'jinaai/jina-embeddings-v2-base-en', 
     trust_remote_code=True, 
     low_cpu_mem_usage=True,
-    device_map="auto",
-).to("cpu")
+    device_map="auto"
+).to("cuda")
 
 @app.post("/get_recipe")
 async def get_recipe(
