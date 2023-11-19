@@ -166,3 +166,4 @@ cython_debug/
 Epicurious
 *.pkl
 api_key.txt
+pinecone_api_key.txt
