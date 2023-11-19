@@ -13,9 +13,12 @@ from transformers import (AutoModel, AutoModelForSequenceClassification,
                           AutoTokenizer)
 
 app = FastAPI()
-client = OpenAI(api_key="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")
+with open("api_key.txt", "r") as f:
+    api_key = f.read().strip()
+client = OpenAI(api_key=api_key)
 
-PINECONE_API_KEY = "35abfaa7-5beb-403b-a878-bbcc51742cc4"
+with open("pinecone_api_key.txt", "r") as f:
+    PINECONE_API_KEY = f.read().strip()
 pinecone.init(api_key=PINECONE_API_KEY, environment="gcp-starter")
 
 index = pinecone.Index("recipes")
@@ -113,7 +116,7 @@ async def get_recipe(
     
     ingredients_over_rounds = []
     
-    for _ in tqdm(range(5)):
+    for _ in tqdm(range(2)):
         ingredients = client.chat.completions.create(
             model="gpt-4-vision-preview",
             messages=[
@@ -143,7 +146,7 @@ async def get_recipe(
     ingredient_prompt += "Please make a refined list of ingredients which is composed of the ingredients which are agreed upon by the experts:"
 
     ingredients = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
@@ -184,7 +187,7 @@ async def get_recipe(
     print("#"*100)
     
     created_recipe = client.chat.completions.create(
-        model="gpt-4-vision-preview",
+        model="gpt-4",
         messages=[
             {
                 "role": "system",
