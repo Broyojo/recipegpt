@@ -96,7 +96,7 @@ model = AutoModel.from_pretrained(
     trust_remote_code=True, 
     low_cpu_mem_usage=True,
     device_map="auto"
-).to("cuda")
+)
 
 @app.post("/get_recipe")
 async def get_recipe(
