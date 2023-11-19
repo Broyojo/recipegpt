@@ -8,6 +8,7 @@ import pinecone
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.responses import HTMLResponse
 from openai import OpenAI
+from tqdm import tqdm
 from transformers import (AutoModel, AutoModelForSequenceClassification,
                           AutoTokenizer)
 

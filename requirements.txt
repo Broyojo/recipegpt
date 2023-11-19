@@ -5,3 +5,4 @@ pinecone-client
 accelerate
 fastapi
 uvicorn[standard]
+python-multipart
