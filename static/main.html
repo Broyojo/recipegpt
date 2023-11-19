@@ -5,12 +5,41 @@
     <title>Recipe Generator</title>
 
     <!-- <link rel="stylesheet" href="styles.css"> -->
+    <style>
+        p {
+            white-space: pre-wrap;
+        }
+    </style>
     <script>
+        function startButtonAnimation(button) {
+            let count = 0;
+            button.textContent = 'Generating';
+
+            // Set up an interval to update the button text
+            const intervalId = setInterval(() => {
+                count = (count + 1) % 4;
+                let dots = '.'.repeat(count);
+                button.textContent = `Generating${dots}`;
+            }, 500); // Update every 500 milliseconds
+
+            // Return the interval ID so it can be stopped later
+            return intervalId;
+        }
+
+        function stopButtonAnimation(button, intervalId) {
+            clearInterval(intervalId);
+            button.textContent = 'Generate Recipes';
+        }
+
         async function sendImagetoOpenAI(event) {
             event.preventDefault(); // Prevent default form submission behavior
 
             var form = document.getElementById('myForm');
             var formData = new FormData(form);
+            var submitButton = document.querySelector('button[type="submit"]');
+            var resultElement = document.getElementById('result');
+            submitButton.disabled = true;
+            let animationId = startButtonAnimation(submitButton);
 
             try {
                 let response = await fetch('/get_recipe', {
@@ -20,10 +49,19 @@
 
                 let result = await response.json();
                 console.log('Success:', result);
-                // Handle the response here, like updating the UI with the generated recipe
+
+                if ("error" in result) {
+                    alert(result["error"])
+                } else if ("recipe" in result) {
+                    resultElement.innerHTML = result["recipe"];
+                    document.getElementById('food_image').src = result["image"];
+                }
             } catch (error) {
                 console.error('Error:', error);
-                // Handle errors, e.g., show error message to the user
+                alert('An error occurred while processing the request.');
+            } finally {
+                submitButton.disabled = false;
+                stopButtonAnimation(submitButton, animationId);
             }
         }
     </script>
@@ -56,7 +94,7 @@
 
             <div class="input-field" style="margin-top: 20px;">
                 <label for="dietaryRestrictions">Dietary Restrictions/Diet:</label>
-                <select id="dietaryRestrictions" name="dietaryRestrictions" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
+                <select id="dietaryRestrictions" name="dietary_restrictions" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
                     <option value="none">None</option>
                     <option value="vegetarian">Vegetarian</option>
                     <option value="vegan">Vegan</option>
@@ -72,7 +110,7 @@
 
             <div class="input-field" style="margin-top: 20px;">
                 <label for="mealType">Type of Meal/Diet:</label>
-                <select id="mealType" name="mealType" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
+                <select id="mealType" name="meal_type" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">
                     <option value="breakfast">Breakfast</option>
                     <option value="lunch">Lunch</option>
                     <option value="dinner">Dinner</option>
@@ -85,14 +123,14 @@
 
             <div class="input-field" style="margin-top: 20px;">
                 <label for="manualIngredients">Enter Ingredients Manually:</label>
-                <textarea id="manualIngredients" name="manualIngredients" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;"></textarea>
+                <textarea id="manualIngredients" name="manual_ingredients" style="width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px;">None</textarea>
             </div>
 
             <button type="submit" style="background-color: #673ab7; color: #fff; padding: 10px; border: none; border-radius: 5px; margin-top: 20px;">Generate Recipes</button>
         </form>
     </div>
 
-    
-
+    <img id="food_image", height="512", width="512">
+    <p id="result"></p>
 </body>
 </html>

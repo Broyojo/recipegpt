@@ -105,9 +105,9 @@ model = AutoModel.from_pretrained(
 async def get_recipe(
     photos: List[UploadFile] = Form(...),
     target_calorie_range: str = Form(...),
-    # dietary_restrictions: str = Form(...),
-    # meal_type: str = Form(...),
-    # manual_ingredients: str = Form(...)
+    dietary_restrictions: str = Form(...),
+    meal_type: str = Form(...),
+    manual_ingredients: str = Form(...)
 ):
     encoded_files = []
     for file in photos:
@@ -117,24 +117,27 @@ async def get_recipe(
     ingredients_over_rounds = []
     
     for _ in tqdm(range(2)):
-        ingredients = client.chat.completions.create(
-            model="gpt-4-vision-preview",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "You are a helpful ingredient identifier."
-                },
-                {
-                    "role": "user",
-                    "content": [
-                        "Output bulleted list of edible ingredients in the image along with their quantities.",
-                        *[{"image": file} for file in encoded_files],
-                    ],
-                }
-            ],
-            temperature=0.7,
-            max_tokens=1024,
-        ).choices[0].message.content
+        try:
+            ingredients = client.chat.completions.create(
+                model="gpt-4-vision-preview",
+                messages=[
+                    {
+                        "role": "system",
+                        "content": "You are a helpful ingredient identifier."
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            f"Output bulleted list of edible ingredients in the image along with their quantities. Make sure the ingredients follow the dietary restriction of '{dietary_restrictions}'.",
+                            *[{"image": file} for file in encoded_files],
+                        ],
+                    }
+                ],
+                temperature=0.7,
+                max_tokens=1024,
+            ).choices[0].message.content
+        except:
+            return {"error": "Please upload a valid image."}
         
         ingredients_over_rounds.append(ingredients)
 
@@ -175,12 +178,12 @@ async def get_recipe(
     for result in results.matches:
         matched_recipes.append(recipe_documents[int(result["id"])][0])
         
-    prompt = f"You are a helpful recipe creator/suggester. Any recipe you suggest or create must be possible to make given all the ingredients available. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Here are the ingredients available:\n{ingredients}\n\n. Here are a few potentially relevant recipes that relate to the available ingredients:\n"
+    prompt = f"You are a helpful recipe creator/suggester. Any recipe you suggest or create must be possible to make given all the ingredients available. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Here are the ingredients available:\n{ingredients}\n{manual_ingredients}\n\n. Here are a few potentially relevant recipes that relate to the available ingredients:\n"
     
     for matched_recipe in matched_recipes:
         prompt += f"{matched_recipe}\n\n"
     
-    prompt += "Your job is to synthesize a new recipe that is possible to make given the available ingredients and taking some inspiration from the potentially relevant recipes. Ensure that the calorie count of the recipe is within the provided range. Please make your recipe detailed and easy to follow:"
+    prompt += f"Your job is to synthesize a new recipe that is possible to make given the available ingredients and taking some inspiration from the potentially relevant recipes. Ensure that the calorie count of the recipe is within the provided range. Make sure you follow the dietary restriction of '{dietary_restrictions}'. The meal type is '{meal_type}'. Please make your recipe detailed and easy to follow:"
     
     print(prompt)
     
@@ -198,4 +201,51 @@ async def get_recipe(
     ).choices[0].message.content
     
     print(created_recipe)
+    
+    response = client.images.generate(
+        model="dall-e-3",
+        prompt=created_recipe,
+        size="1024x1024",
+        quality="standard",
+        n=1,
+    )
+
+    image_url = response.data[0].url
+    
+    return {"recipe": created_recipe, "image": image_url}
+
+
+@app.post("/inverse_recipe")
+async def inverse_recipe(
+    photos: List[UploadFile] = Form(...),
+    target_calorie_range: str = Form(...),
+    dietary_restrictions: str = Form(...),
+):
+    encoded_files = []
+    for file in photos:
+        content = await file.read()
+        encoded_files.append(base64.b64encode(content).decode("utf-8"))
+        
+    try:
+        created_recipe = client.chat.completions.create(
+            model="gpt-4-vision-preview",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful recipe maker."
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        f"Output a recipe that is possible to make given the ingredients in the image. Here is an example recipe: {recipe_documents[0]}\n\nMake sure the recipe follows the dietary restriction of '{dietary_restrictions}'. The recipe must have a calorie count within the range \n{target_calorie_range}\n\n. Please make your recipe detailed and easy to follow.",
+                        *[{"image": file} for file in encoded_files],
+                    ],
+                }
+            ],
+            temperature=0.7,
+            max_tokens=1024,
+        ).choices[0].message.content
+    except:
+        return {"error": "Please upload a valid image."}
+        
     return {"recipe": created_recipe}
